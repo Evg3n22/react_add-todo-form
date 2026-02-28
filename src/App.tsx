@@ -10,10 +10,17 @@ import { useState } from 'react';
 export const App = () => {
   const users: User[] = [...usersFromServer];
   const [todos, setTodos] = useState<Todo[]>(() =>
-    todosFromServer.map(t => ({
-      ...t,
-      user: users.find(u => u.id === t.userId)!,
-    })),
+    todosFromServer
+      .map(t => {
+        const user = users.find(u => u.id === t.userId);
+
+        if (!user) {
+          return null;
+        }
+
+        return { ...t, user } as Todo;
+      })
+      .filter((t): t is Todo => t !== null),
   );
 
   const [title, setTitle] = useState('');
@@ -33,15 +40,15 @@ export const App = () => {
     return Math.max(...arr.map(t => t.id)) + 1;
   };
 
-  const selectedUser = users.find(u => u.id === Number(selectUser));
+  // const selectedUser = users.find(u => u.id === Number(selectUser));
 
   // const todosWithUsers = todos.filter(todo =>
   //   users.some(u => u.id === todo.userId),
   // );
 
-  const findUserById = (usersArr: User[], id: number): User | undefined => {
-    return usersArr.find(user => user.id === id);
-  };
+  // const findUserById = (usersArr: User[], id: number): User | undefined => {
+  //   return usersArr.find(user => user.id === id);
+  // };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -53,12 +60,20 @@ export const App = () => {
       return;
     }
 
+    const selectedUser = users.find(u => u.id === Number(selectUser));
+
+    if (!selectedUser) {
+      setHasSelectError(true);
+
+      return;
+    }
+
     const newTodo: Todo = {
       id: getNextId(todos),
-      title: title,
+      title: title.trim(),
       completed: false,
-      userId: selectedUser!.id,
-      user: findUserById(users, selectedUser!.id)!,
+      userId: selectedUser.id,
+      user: selectedUser,
     };
 
     setTodos(prev => [...prev, newTodo]);
@@ -72,39 +87,49 @@ export const App = () => {
 
       <form action="/api/todos" method="POST" onSubmit={handleSubmit}>
         <div className="field">
-          <input
-            type="text"
-            data-cy="titleInput"
-            placeholder="Enter a title"
-            value={title}
-            onChange={event => {
-              setTitle(event.target.value);
-              setHasTitleError(false);
-            }}
-          />
+          <label htmlFor="titleInput">
+            Title
+            <br />
+            <input
+              id="titleInput"
+              type="text"
+              data-cy="titleInput"
+              placeholder="Enter a title"
+              value={title}
+              onChange={event => {
+                setTitle(event.target.value);
+                setHasTitleError(false);
+              }}
+            />
+          </label>
 
           {hasTitleError && <span className="error">Please enter a title</span>}
         </div>
 
         <div className="field">
-          <select
-            data-cy="userSelect"
-            value={selectUser}
-            onChange={event => {
-              setSelectUser(event.target.value);
-              setHasSelectError(false);
-            }}
-          >
-            <option value="0" disabled>
-              Choose a user
-            </option>
-
-            {users.map(user => (
-              <option value={user.id} key={user.id}>
-                {user.name}
+          <label htmlFor="userSelect">
+            Select user
+            <br />
+            <select
+              data-cy="userSelect"
+              id="userSelect"
+              value={selectUser}
+              onChange={event => {
+                setSelectUser(event.target.value);
+                setHasSelectError(false);
+              }}
+            >
+              <option value="0" disabled>
+                Choose a user
               </option>
-            ))}
-          </select>
+
+              {users.map(user => (
+                <option value={user.id} key={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </label>
 
           {hasSelectError && (
             <span className="error">Please choose a user</span>
