@@ -1,24 +1,33 @@
 import { Todo } from '../../services/todo';
-import { User } from '../../services/user';
+// import { User } from '../../services/user';
 import { TodoInfo } from '../TodoInfo';
 
 type Props = {
-  users: User[];
+  // users: User[];
   todos: Todo[];
 };
 
-export const TodoList = ({ users, todos }: Props) => {
-  const findUserById = (usersArr: User[], id: number): User | undefined => {
-    return usersArr.find(user => user.id === id);
-  };
+export const TodoList = ({ todos }: Props) => {
+  // const findUserById = (usersArr: User[], id: number): User | undefined => {
+  //   return usersArr.find(user => user.id === id);
+  // };
+
+  // const todosWithUsers = todos.filter(todo =>
+  //   users.some(u => u.id === todo.userId),
+  // );
 
   return (
     <section className="TodoList">
       {todos.map(todo => {
-        const user: User = findUserById(users, todo.userId)!;
+        // const user: User = findUserById(users, todo.userId)!;
 
         return (
-          <TodoInfo key={todo.id} user={user} todo={todo} data-id={todo.id} />
+          <TodoInfo
+            key={todo.id}
+            user={todo.user}
+            todo={todo}
+            data-id={todo.id}
+          />
         );
       })}
 

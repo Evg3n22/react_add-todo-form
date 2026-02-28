@@ -9,7 +9,12 @@ import { useState } from 'react';
 
 export const App = () => {
   const users: User[] = [...usersFromServer];
-  const [todos, setTodos] = useState<Todo[]>(() => [...todosFromServer]);
+  const [todos, setTodos] = useState<Todo[]>(() =>
+    todosFromServer.map(t => ({
+      ...t,
+      user: users.find(u => u.id === t.userId)!,
+    })),
+  );
 
   const [title, setTitle] = useState('');
   const [selectUser, setSelectUser] = useState('0');
@@ -30,6 +35,14 @@ export const App = () => {
 
   const selectedUser = users.find(u => u.id === Number(selectUser));
 
+  // const todosWithUsers = todos.filter(todo =>
+  //   users.some(u => u.id === todo.userId),
+  // );
+
+  const findUserById = (usersArr: User[], id: number): User | undefined => {
+    return usersArr.find(user => user.id === id);
+  };
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -41,10 +54,11 @@ export const App = () => {
     }
 
     const newTodo: Todo = {
-      id: getNextId(todos) + 1,
+      id: getNextId(todos),
       title: title,
       completed: false,
       userId: selectedUser!.id,
+      user: findUserById(users, selectedUser!.id)!,
     };
 
     setTodos(prev => [...prev, newTodo]);
@@ -61,6 +75,7 @@ export const App = () => {
           <input
             type="text"
             data-cy="titleInput"
+            placeholder="Enter a title"
             value={title}
             onChange={event => {
               setTitle(event.target.value);
@@ -101,7 +116,7 @@ export const App = () => {
         </button>
       </form>
 
-      <TodoList users={users} todos={todos} />
+      <TodoList todos={todos} />
 
       {/* <section className="TodoList">
         <article data-id="1" className="TodoInfo TodoInfo--completed">
